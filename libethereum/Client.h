@@ -39,14 +39,12 @@
 #include "Block.h"
 #include "CommonNet.h"
 #include "ClientBase.h"
-<<<<<<< HEAD
 #include "StateImporter.h"
 #include "BlockChainImporter.h"
+#include "WarpHostCapability.h"
 
 #include <boost/filesystem/path.hpp>
-=======
-#include "WarpHostCapability.h"
->>>>>>> WIP Download snapshot through Parity's warp protocol
+
 
 namespace dev
 {

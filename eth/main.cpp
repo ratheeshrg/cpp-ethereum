@@ -792,16 +792,13 @@ int main(int argc, char** argv)
 			noPinning = true;
 			bootstrap = false;
 		}
-<<<<<<< HEAD
 		else if ((arg == std::string("--import-snapshot")) && i + 1 < argc)
 		{
 			mode = OperationMode::ImportSnapshot;
 			filename = argv[++i];
 		}
-=======
 		else if (arg == "--download-snapshot" && i + 1 < argc)
 			snapshotPath = argv[++i];
->>>>>>> WIP Download snapshot through Parity's warp protocol
 		else
 		{
 			cerr << "Invalid argument: " << arg << "\n";

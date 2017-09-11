@@ -32,24 +32,17 @@ using namespace dev;
 using namespace eth;
 using namespace p2p;
 
-struct SnapshotLog: public LogChannel
-{
-	static char const* name() { return "SNAP"; }
-	static int const verbosity = 9;
-	static const bool debug = false;
-};
-
-SnapshotDownloader::SnapshotDownloader(WarpHostCapability& _host, BlockChain const& _blockChain, std::string const& _snapshotPath): 
+SnapshotDownloader::SnapshotDownloader(WarpHostCapability& _host, BlockChain const& _blockChain, boost::filesystem::path const&  _snapshotPath):
 	m_host(_host), m_blockChain(_blockChain), m_snapshotDir(_snapshotPath)
 {
 }
-
+/*
 void SnapshotDownloader::onPeerStatus(shared_ptr<WarpPeerCapability> _peer)
 {
 	if (_peer->validateStatus(m_blockChain.genesisHash(), { m_host.protocolVersion() }, m_host.networkId()))
 		startDownload(_peer);
 }
-
+*/
 void SnapshotDownloader::onPeerManifest(shared_ptr<WarpPeerCapability> _peer, RLP const& _r)
 {
 	if (m_downloading)

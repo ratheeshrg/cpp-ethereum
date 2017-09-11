@@ -34,12 +34,19 @@ class BlockChain;
 class WarpHostCapability;
 class WarpPeerCapability;
 
+struct SnapshotLog: public LogChannel
+{
+	static char const* name() { return "SNAP"; }
+	static int const verbosity = 9;
+	static const bool debug = false;
+};
+
 class SnapshotDownloader
 {
 public:
-	SnapshotDownloader(WarpHostCapability& _host, BlockChain const& _blockChain, std::string const& _snapshotPath);
+	SnapshotDownloader(WarpHostCapability& _host, BlockChain const& _blockChain, boost::filesystem::path const& _snapshotPath);
 
-	void onPeerStatus(std::shared_ptr<WarpPeerCapability> _peer);
+//	void onPeerStatus(std::shared_ptr<WarpPeerCapability> _peer);
 
 	void onPeerManifest(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r);
 
@@ -61,7 +68,7 @@ private:
 	std::deque<h256> m_stateChunksQueue;
 	std::deque<h256> m_blockChunksQueue;
 
-	std::string const m_snapshotDir;
+	boost::filesystem::path const m_snapshotDir;
 };
 
 }

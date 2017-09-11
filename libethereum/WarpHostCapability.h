@@ -24,6 +24,8 @@
 
 #include <libdevcore/Worker.h>
 
+#include <boost/fiber/unbuffered_channel.hpp>
+
 namespace dev
 {
 
@@ -33,7 +35,7 @@ namespace eth
 class WarpHostCapability: public p2p::HostCapability<WarpPeerCapability>, Worker
 {
 public:
-	WarpHostCapability(BlockChain const& _blockChain, u256 const& _networkId, std::string const& _snapshotPath);
+	WarpHostCapability(BlockChain const& _blockChain, u256 const& _networkId, boost::filesystem::path const& _snapshotPath);
 
 	unsigned protocolVersion() const { return c_WarpProtocolVersion; }
 	u256 networkId() const { return m_networkId; }
@@ -49,6 +51,8 @@ private:
 
 	std::unique_ptr<SnapshotDownloader> m_downloader;
 	std::shared_ptr<WarpPeerObserverFace> m_peerObserver;
+	boost::fibers::unbuffered_channel<bytes> m_manifestChannel;
+	boost::fibers::unbuffered_channel<std::shared_ptr<WarpPeerCapability>> m_newConnectionsChannel;
 };
 
 }

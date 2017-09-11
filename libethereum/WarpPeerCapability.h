@@ -89,7 +89,7 @@ private:
 	bool interpret(unsigned _id, RLP const& _r) override;
 
 	void setAsking(Asking _a);
-		
+
 	void setIdle() { setAsking(Asking::Nothing); }
 
 	unsigned m_hostProtocolVersion = 0;

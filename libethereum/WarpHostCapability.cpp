@@ -21,6 +21,9 @@
 #include "BlockChain.h"
 #include "SnapshotDownloader.h"
 
+#include <boost/fiber/fiber.hpp>
+
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -32,16 +35,24 @@ namespace
 class WarpPeerObserver: public WarpPeerObserverFace
 {
 public:
-	explicit WarpPeerObserver(SnapshotDownloader& _downloader): m_downloader(_downloader) {}
+	WarpPeerObserver(SnapshotDownloader& _downloader, 
+		WarpHostCapability& _host,
+		BlockChain const& _blockChain,
+		boost::fibers::unbuffered_channel<bytes>& _manifestChannel/*,
+		boost::fibers::unbuffered_channel<std::shared_ptr<WarpPeerCapability>>& _newConnectionsChannel*/): 
+		m_downloader(_downloader), m_host(_host), m_blockChain(_blockChain), m_manifestChannel(_manifestChannel)/*, m_newConnectionsChannel(_newConnectionsChannel)*/ {}
 
 	void onPeerStatus(shared_ptr<WarpPeerCapability> _peer) override
 	{
-		m_downloader.onPeerStatus(_peer);
+//		m_downloader.onPeerStatus(_peer);
+		if (_peer->validateStatus(m_blockChain.genesisHash(), {m_host.protocolVersion()}, m_host.networkId()))
+			_peer->requestManifest();
 	}
 
 	void onPeerManifest(shared_ptr<WarpPeerCapability> _peer, RLP const& _r) override
 	{
-		m_downloader.onPeerManifest(_peer, _r);
+		//m_downloader.onPeerManifest(_peer, _r);
+		m_manifestChannel.push(_r.toBytes());
 	}
 
 	void onPeerData(shared_ptr<WarpPeerCapability> _peer, RLP const& _r) override
@@ -56,16 +67,54 @@ public:
 
 private:
 	SnapshotDownloader& m_downloader;
+
+	WarpHostCapability& m_host;
+	BlockChain const& m_blockChain;
+	boost::fibers::unbuffered_channel<bytes>& m_manifestChannel;
+//		boost::fibers::unbuffered_channel<std::shared_ptr<WarpPeerCapability>>& m_newConnectionsChannel;
 };
 
 }
 
-WarpHostCapability::WarpHostCapability(BlockChain const& _blockChain, u256 const& _networkId, std::string const& _snapshotPath):
+WarpHostCapability::WarpHostCapability(BlockChain const& _blockChain, u256 const& _networkId, boost::filesystem::path const& _snapshotPath):
 	m_blockChain(_blockChain),
 	m_networkId(_networkId),
 	m_downloader(new SnapshotDownloader(*this, _blockChain, _snapshotPath)),
-	m_peerObserver(make_shared<WarpPeerObserver>(*m_downloader))
+	m_peerObserver(make_shared<WarpPeerObserver>(*m_downloader, *this, m_blockChain, m_manifestChannel))
 {
+	boost::fibers::fiber f([this](){
+		bytes manifestBytes;
+		m_manifestChannel.pop(manifestBytes);
+
+		RLP _r(manifestBytes); // TODO rename
+		if (!_r.isList() || _r.itemCount() != 1)
+			return;
+
+		RLP const manifest = _r[0];
+
+		u256 version = manifest[0].toInt<u256>();
+		if (version != 2)
+			return;
+
+		u256 const blockNumber = manifest[4].toInt<u256>();
+/* TODO
+if (blockNumber != m_syncingSnapshotNumber)
+			return;
+*/
+		h256s const stateHashes = manifest[1].toVector<h256>();
+		h256s const blockHashes = manifest[2].toVector<h256>();
+
+		h256 const stateRoot = manifest[3].toHash<h256>();
+		h256 const blockHash = manifest[5].toHash<h256>();
+
+		clog(SnapshotLog) << "MANIFEST: "
+			<< "version " << version
+			<< "state root " << stateRoot
+			<< "block number " << blockNumber
+			<< "block hash " << blockHash;
+
+
+	});
 }
 
 shared_ptr<Capability> WarpHostCapability::newPeerCapability(shared_ptr<SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap, uint16_t _capID)
