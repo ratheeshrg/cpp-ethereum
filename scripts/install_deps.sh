@@ -99,6 +99,7 @@ Darwin)
     brew install \
         leveldb \
         libmicrohttpd \
+	valgrind \
         $TRAVIS_PACKAGES
 
     ;;
