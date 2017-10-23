@@ -35,25 +35,17 @@ public:
 
 	// Display percantage of completed tests to std::out. Has to be called before execution of every test.
 	static void showProgress();
-	static void setMaxTests(int _count) { m_maxTests = _count; }
-	static void setCurrentTestFileName(std::string const& _name) { m_currentTestFileName = _name; }
-	static void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
-	static std::string const& testName() { return m_currentTestName; }
-	static std::string const& caseName() { return m_currentTestCaseName; }
-	static std::string const& testFileName() { return m_currentTestFileName; }
+	static void setMaxTests(int) { }
+	static void setCurrentTestFileName(std::string const&) { }
+	static void setCurrentTestName(std::string const&) { }
+	static std::string const testName() { return "(na)"; }
+	static std::string const caseName() { return "(na)"; }
+	static std::string const testFileName() { return "(na)"; }
 	static void printTestExecStats();
 	~TestOutputHelper() { TestOutputHelper::finishTest(); }
 private:
 	static void initTest(size_t _maxTests = 1);
 	static void finishTest();
-	static Timer m_timer;
-	static size_t m_currTest;
-	static size_t m_maxTests;
-	static std::string m_currentTestName;
-	static std::string m_currentTestCaseName;
-	static std::string m_currentTestFileName;
-	typedef std::pair<double, std::string> execTimeName;
-	static std::vector<execTimeName> m_execTimeResults;
 };
 
 } //namespace test

@@ -30,24 +30,13 @@ using namespace dev::test;
 using namespace dev::eth;
 using namespace boost;
 
-Timer TestOutputHelper::m_timer;
-size_t TestOutputHelper::m_currTest = 0;
-size_t TestOutputHelper::m_maxTests = 1;
-string TestOutputHelper::m_currentTestName = "n/a";
-string TestOutputHelper::m_currentTestCaseName = "n/a";
-string TestOutputHelper::m_currentTestFileName;
-std::vector<TestOutputHelper::execTimeName> TestOutputHelper::m_execTimeResults;
-void TestOutputHelper::initTest(size_t _maxTests)
+void TestOutputHelper::initTest(size_t)
 {
 	Ethash::init();
 	BasicAuthority::init();
 	NoProof::init();
-	m_timer.restart();
-	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
 	if (!Options::get().createRandomTest)
-		std::cout << "Test Case \"" + m_currentTestCaseName + "\": \n";
-	m_maxTests = _maxTests;
-	m_currTest = 0;
+		std::cout << "Test Case \"\": \n";
 }
 
 bool TestOutputHelper::checkTest(std::string const& _testName)
@@ -56,34 +45,20 @@ bool TestOutputHelper::checkTest(std::string const& _testName)
 		return false;
 
 	cnote << _testName;
-	m_currentTestName = _testName;
 	return true;
 }
 
 void TestOutputHelper::showProgress()
 {
-	m_currTest++;
-	int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));
-	if (!test::Options::get().createRandomTest && (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests))
+	if (!test::Options::get().createRandomTest)
 	{
-		int percent = int(m_currTest*100/m_maxTests);
-		std::cout << percent << "%";
-		if (percent != 100)
-			std::cout << "...";
+		std::cout << "...";
 		std::cout << "\n";
 	}
 }
 
 void TestOutputHelper::finishTest()
 {
-	if (Options::get().exectimelog)
-	{
-		execTimeName res;
-		res.first = m_timer.elapsed();
-		res.second = caseName();
-		std::cout << res.second + " time: " + toString(res.first) << "\n";
-		m_execTimeResults.push_back(res);
-	}
 }
 
 void TestOutputHelper::printTestExecStats()
@@ -91,8 +66,5 @@ void TestOutputHelper::printTestExecStats()
 	if (Options::get().exectimelog)
 	{
 		std::cout << std::left;
-		std::sort(m_execTimeResults.begin(), m_execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first < _a.first); });
-		for (size_t i = 0; i < m_execTimeResults.size(); i++)
-			std::cout << setw(45) << m_execTimeResults[i].second << setw(25) << " time: " + toString(m_execTimeResults[i].first) << "\n";
 	}
 }
